@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="it" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tombola Italiano-Inglese</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+
+    @keyframes slideUp {
+      0% { transform: translateY(150%) scale(0.5); opacity: 0; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    @keyframes slideInRight {
+      0% { transform: translateX(100%) scale(0.5); opacity: 0; }
+      100% { transform: translateX(0) scale(1); opacity: 1; }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(-10px) rotate(0deg); }
+      50% { transform: translateY(10px) rotate(5deg); }
+    }
+
+    @keyframes bagShake {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      25% { transform: rotate(-15deg) scale(1.05); }
+      50% { transform: rotate(15deg) scale(1.1); }
+      75% { transform: rotate(-10deg) scale(1.05); }
+    }
+
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.5); }
+      50% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.8); }
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .slide-up-animation {
+      animation: slideUp 0.6s ease-out;
+    }
+
+    .slide-in-right {
+      animation: slideInRight 0.6s ease-out;
+    }
+
+    .bag-shake {
+      animation: bagShake 1.2s ease-in-out;
+    }
+
+    .glow-effect {
+      animation: glow 2s ease-in-out infinite;
+    }
+
+    .pop-in {
+      animation: popIn 0.5s ease-out;
+    }
+
+    .pulse-animation {
+      animation: pulse 0.3s ease-in-out;
+    }
+
+    .float-animation {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .card-front, .card-back {
+      backface-visibility: hidden;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+    }
+
+    .book-icon {
+      position: fixed;
+      color: rgba(255, 255, 255, 0.1);
+      font-size: 3em;
+      pointer-events: none;
+      z-index: 1;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    #floating-books {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .teacher-container {
+      position: relative;
+      width: 350px;
+      height: 350px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .teacher-container:hover {
+      transform: scale(1.05);
+      filter: brightness(1.1);
+    }
+
+    .teacher-static {
+      display: block;
+      font-size: 15rem;
+    }
+
+    .teacher-animated {
+      display: none;
+      font-size: 15rem;
+      animation: pulse 0.5s ease-in-out infinite;
+    }
+
+    .is-animating .teacher-static {
+      display: none;
+    }
+
+    .is-animating .teacher-animated {
+      display: block;
+    }
+
+    .bingo-cell {
+      width: 80px;
+      height: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .bingo-cell.extracted {
+      background: linear-gradient(135deg, #3b82f6, #22c55e);
+      box-shadow: 0 4px 15px rgba(34, 197, 94, 0.5);
+    }
+
+    .bingo-cell.extracted:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(34, 197, 94, 0.7);
+    }
+
+    .bingo-cell-emoji {
+      font-size: 2rem;
+      line-height: 1;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .bingo-cell.extracted .bingo-cell-emoji:hover {
+      transform: scale(1.2);
+    }
+
+    .bingo-cell-name {
+      font-size: 0.5rem;
+      font-weight: 600;
+      color: white;
+      text-align: center;
+      margin-top: 2px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+      line-height: 1.1;
+    }
+
+    .bingo-board-container {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      border: 5px solid #fbbf24;
+    }
+
+    /* Modal per emoji ingrandita */
+    .emoji-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      cursor: pointer;
+    }
+
+    .emoji-modal.active {
+      display: flex;
+    }
+
+    .emoji-modal-content {
+      background: white;
+      padding: 40px;
+      border-radius: 30px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      animation: popIn 0.4s ease-out;
+      max-width: 90%;
+    }
+
+    .emoji-modal-emoji {
+      font-size: 10rem;
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+
+    .emoji-modal-name {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #16a34a;
+      margin-bottom: 10px;
+    }
+
+    .emoji-modal-type {
+      font-size: 1.2rem;
+      color: #666;
+      font-style: italic;
+    }
+
+    /* Layout orizzontale per Teacher e Card */
+    .teacher-card-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+      .teacher-card-container {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body class="h-full m-0 p-0 font-sans overflow-auto" style="background: linear-gradient(135deg, #047857 0%, #16a34a 50%, #22c55e 100%);">
+  <div id="floating-books"></div>
+
+  <!-- Modal per emoji ingrandita -->
+  <div id="emoji-modal" class="emoji-modal">
+    <div class="emoji-modal-content">
+      <div id="modal-emoji" class="emoji-modal-emoji"></div>
+      <div id="modal-name" class="emoji-modal-name"></div>
+      <div id="modal-type" class="emoji-modal-type"></div>
+    </div>
+  </div>
+
+  <div id="app-wrapper" class="min-h-full w-full flex flex-col items-center justify-center p-8 relative z-10">
+    <h1 id="title" class="text-6xl font-bold text-white mb-8 text-center drop-shadow-lg">
+      🎓 TOMBOLA ITALIANO - INGLESE 📚
+    </h1>
+
+    <!-- Container orizzontale per Teacher e Card -->
+    <div class="teacher-card-container mb-8">
+      <!-- Teacher Character -->
+      <div class="teacher-container" id="teacher-container">
+        <div class="teacher-static">👨‍🏫</div>
+        <div class="teacher-animated">📝</div>
+      </div>
+
+      <!-- Card animata (di fianco al Teacher) -->
+      <div id="card-container" class="hidden">
+        <div id="card" class="relative w-80 h-96 cursor-pointer" style="perspective: 1000px;">
+          <div class="w-full h-full relative" style="transform-style: preserve-3d; transition: transform 0.6s;">
+            <div class="card-front bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl shadow-2xl p-8 flex items-center justify-center border-4 border-yellow-400">
+              <h2 id="card-name" class="text-3xl font-bold text-white text-center drop-shadow-lg"></h2>
+            </div>
+            <div class="card-back bg-gradient-to-br from-green-600 to-green-700 rounded-2xl shadow-2xl p-8 flex flex-col items-center justify-center border-4 border-yellow-400">
+              <div id="card-image" class="text-8xl mb-4"></div>
+              <p id="card-name-back" class="text-2xl font-semibold text-white text-center drop-shadow-lg"></p>
+              <p id="card-type" class="text-lg text-yellow-200 mt-2 italic"></p>
+            </div>
+          </div>
+        </div>
+        <p class="text-white text-center mt-4 text-xl drop-shadow-md">Clicca per girare!</p>
+      </div>
+    </div>
+
+    <button id="extract-btn" class="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold text-2xl py-4 px-8 rounded-full shadow-lg transition-all duration-200 transform hover:scale-105 mb-8 glow-effect">
+      🎲 Estrai una Parola
+    </button>
+
+    <!-- Toggle audio -->
+    <div class="mb-4">
+      <button id="audio-toggle" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all duration-200 hover:scale-105">
+        🔊 Audio: ON
+      </button>
+    </div>
+
+    <!-- Tabellone Tombola -->
+    <div class="bingo-board-container mb-8">
+      <div class="flex justify-between items-center mb-4 flex-wrap gap-4">
+        <h2 class="text-3xl font-bold text-white drop-shadow-lg">TABELLONE</h2>
+        <button id="reset-btn" class="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all duration-200 hover:scale-105">
+          🔄 Ricomincia
+        </button>
+      </div>
+      <div id="bingo-board" class="grid grid-cols-10 gap-2">
+        <!-- Le celle verranno generate dinamicamente -->
+      </div>
+      <div class="mt-4 text-center">
+        <p class="text-white text-xl font-bold drop-shadow-md">
+          Estratte: <span id="count" class="text-yellow-300">0</span>/<span id="total" class="text-yellow-300"></span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Legenda categorie -->
+    <div class="bg-white bg-opacity-95 rounded-xl p-6 max-w-4xl w-full shadow-2xl">
+      <h3 class="text-2xl font-bold text-green-700 mb-4">📋 Legenda</h3>
+      <div class="p-3 bg-blue-100 rounded-lg flex items-center gap-3">
+        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg"></div>
+        <div>
+          <span class="font-bold text-blue-700">VOCABOLARIO COMPLETO</span>
+          <p class="text-sm text-gray-600">Davanti: italiano • Dietro: inglese + emoji</p>
+        </div>
+      </div>
+      
+      <div class="mt-6 bg-yellow-50 p-4 rounded-lg border-2 border-yellow-400">
+        <h4 class="font-bold text-yellow-800 mb-2">💡 Come si gioca:</h4>
+        <ol class="text-sm text-gray-700 space-y-1 list-decimal list-inside">
+          <li>Clicca sull'insegnante per estrarre una parola</li>
+          <li>Sul tabellone vedi la parola in <span class="text-blue-600 font-semibold">ITALIANO</span></li>
+          <li>Gira la card per vedere la traduzione in <span class="text-green-600 font-semibold">INGLESE</span> con emoji</li>
+          <li>Clicca sull'emoji sul tabellone per ingrandirla</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Firma -->
+    <div class="mt-8 text-center">
+      <p class="text-white text-sm opacity-70 drop-shadow-md">
+        Creato da <span class="font-semibold">Prof. D'Agata</span> 🎓
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const italianWords = [
+      // AGGETTIVI DI PERSONALITÀ (46 parole)
+      { name: "calmo", back: "CALM", emoji: "😌", type: "vocab", category: "personality" },
+      { name: "contento", back: "CHEERFUL", emoji: "😊", type: "vocab", category: "personality" },
+      { name: "intelligente", back: "CLEVER", emoji: "🧠", type: "vocab", category: "personality" },
+      { name: "sicuro di sé", back: "CONFIDENT", emoji: "💪", type: "vocab", category: "personality" },
+      { name: "disonesto", back: "DISHONEST", emoji: "🤥", type: "vocab", category: "personality" },
+      { name: "disorganizzato", back: "DISORGANISED", emoji: "🌀", type: "vocab", category: "personality" },
+      { name: "amichevole", back: "FRIENDLY", emoji: "🤗", type: "vocab", category: "personality" },
+      { name: "divertente", back: "FUNNY", emoji: "😂", type: "vocab", category: "personality" },
+      { name: "diligente", back: "HARD-WORKING", emoji: "💼", type: "vocab", category: "personality" },
+      { name: "onesto", back: "HONEST", emoji: "✅", type: "vocab", category: "personality" },
+      { name: "impaziente", back: "IMPATIENT", emoji: "⏰", type: "vocab", category: "personality" },
+      { name: "insensibile", back: "INSENSITIVE", emoji: "🧊", type: "vocab", category: "personality" },
+      { name: "gentile", back: "KIND", emoji: "💝", type: "vocab", category: "personality" },
+      { name: "pigro", back: "LAZY", emoji: "😴", type: "vocab", category: "personality" },
+      { name: "molto triste", back: "MISERABLE", emoji: "😭", type: "vocab", category: "personality" },
+      { name: "nervoso", back: "NERVOUS", emoji: "😰", type: "vocab", category: "personality" },
+      { name: "rumoroso", back: "NOISY", emoji: "📢", type: "vocab", category: "personality" },
+      { name: "organizzato", back: "ORGANISED", emoji: "📋", type: "vocab", category: "personality" },
+      { name: "estroverso", back: "OUTGOING", emoji: "🎉", type: "vocab", category: "personality" },
+      { name: "paziente", back: "PATIENT", emoji: "🧘", type: "vocab", category: "personality" },
+      { name: "educato", back: "POLITE", emoji: "🎩", type: "vocab", category: "personality" },
+      { name: "tranquillo", back: "QUIET", emoji: "🤫", type: "vocab", category: "personality" },
+      { name: "affidabile", back: "RELIABLE", emoji: "🤝", type: "vocab", category: "personality" },
+      { name: "scortese", back: "RUDE", emoji: "😠", type: "vocab", category: "personality" },
+      { name: "ragionevole", back: "SENSIBLE", emoji: "🧐", type: "vocab", category: "personality" },
+      { name: "sensibile", back: "SENSITIVE", emoji: "💗", type: "vocab", category: "personality" },
+      { name: "serio", back: "SERIOUS", emoji: "😐", type: "vocab", category: "personality" },
+      { name: "timido", back: "SHY", emoji: "😳", type: "vocab", category: "personality" },
+      { name: "asociale", back: "UNFRIENDLY", emoji: "😒", type: "vocab", category: "personality" },
+      { name: "scontento", back: "UNHAPPY", emoji: "☹️", type: "vocab", category: "personality" },
+      { name: "attivo", back: "ACTIVE", emoji: "🏃", type: "vocab", category: "personality" },
+      { name: "chiacchierone", back: "TALKATIVE", emoji: "💬", type: "vocab", category: "personality" },
+      { name: "sportivo", back: "SPORTY", emoji: "⚽", type: "vocab", category: "personality" },
+      { name: "avventuroso", back: "ADVENTUROUS", emoji: "🧗", type: "vocab", category: "personality" },
+      { name: "affettuoso", back: "LOVING", emoji: "🥰", type: "vocab", category: "personality" },
+      { name: "responsabile", back: "RESPONSIBLE", emoji: "👔", type: "vocab", category: "personality" },
+      { name: "autoritario", back: "BOSSY", emoji: "👑", type: "vocab", category: "personality" },
+      { name: "egoista", back: "SELFISH", emoji: "🙅", type: "vocab", category: "personality" },
+      { name: "non gentile", back: "UNKIND", emoji: "😤", type: "vocab", category: "personality" },
+      { name: "inaffidabile", back: "UNRELIABLE", emoji: "❌", type: "vocab", category: "personality" },
+      { name: "premuroso", back: "CARING", emoji: "🤲", type: "vocab", category: "personality" },
+      { name: "disordinato", back: "MESSY", emoji: "🗑️", type: "vocab", category: "personality" },
+      { name: "modesto", back: "MODEST", emoji: "🙇", type: "vocab", category: "personality" },
+      { name: "cattivo", back: "MEAN", emoji: "😈", type: "vocab", category: "personality" },
+      { name: "testardo", back: "STUBBORN", emoji: "🐂", type: "vocab", category: "personality" },
+      { name: "immaturo", back: "IMMATURE", emoji: "👶", type: "vocab", category: "personality" },
+
+      // SPORT (43 parole)
+      { name: "calcio", back: "FOOTBALL", emoji: "⚽", type: "vocab", category: "sports" },
+      { name: "tennis", back: "TENNIS", emoji: "🎾", type: "vocab", category: "sports" },
+      { name: "hockey sul ghiaccio", back: "ICE HOCKEY", emoji: "🏒", type: "vocab", category: "sports" },
+      { name: "pallavolo", back: "VOLLEYBALL", emoji: "🏐", type: "vocab", category: "sports" },
+      { name: "pallanuoto", back: "WATER POLO", emoji: "🤽‍♂️", type: "vocab", category: "sports" },
+      { name: "campo da calcio", back: "FOOTBALL PITCH", emoji: "🏟️", type: "vocab", category: "sports" },
+      { name: "campo da basket", back: "BASKETBALL COURT", emoji: "🏀", type: "vocab", category: "sports" },
+      { name: "pallina da tennis", back: "TENNIS BALL", emoji: "🎾", type: "vocab", category: "sports" },
+      { name: "racchetta", back: "RACKET", emoji: "🏸", type: "vocab", category: "sports" },
+      { name: "rete", back: "NET", emoji: "🥅", type: "vocab", category: "sports" },
+      { name: "mazza da hockey", back: "STICK", emoji: "🏑", type: "vocab", category: "sports" },
+      { name: "lame", back: "BLADES", emoji: "⛸️", type: "vocab", category: "sports" },
+      { name: "pattini da hockey", back: "ICE SKATES", emoji: "⛸️", type: "vocab", category: "sports" },
+      { name: "pista di ghiaccio", back: "ICE RINK", emoji: "🧊", type: "vocab", category: "sports" },
+      { name: "cuffia", back: "SWIMMING CAP", emoji: "🏊", type: "vocab", category: "sports" },
+      { name: "piscina", back: "SWIMMING POOL", emoji: "🏊‍♂️", type: "vocab", category: "sports" },
+      { name: "casco", back: "HELMET", emoji: "🪖", type: "vocab", category: "sports" },
+      { name: "mazza da baseball", back: "BASEBALL BAT", emoji: "⚾", type: "vocab", category: "sports" },
+      { name: "rimbalzare", back: "TO BOUNCE", emoji: "⛹️‍♂️", type: "vocab", category: "sports" },
+      { name: "sconfiggere", back: "TO BEAT", emoji: "🥊", type: "vocab", category: "sports" },
+      { name: "piegare", back: "TO BEND", emoji: "🤸‍♂️", type: "vocab", category: "sports" },
+      { name: "afferrare", back: "TO CATCH", emoji: "🤾‍♂️", type: "vocab", category: "sports" },
+      { name: "tuffarsi", back: "TO DIVE", emoji: "🤿", type: "vocab", category: "sports" },
+      { name: "pareggiare", back: "TO DRAW", emoji: "🤝", type: "vocab", category: "sports" },
+      { name: "colpire", back: "TO HIT", emoji: "🎯", type: "vocab", category: "sports" },
+      { name: "saltare", back: "TO JUMP", emoji: "🦘", type: "vocab", category: "sports" },
+      { name: "passare", back: "TO PASS", emoji: "🤝", type: "vocab", category: "sports" },
+      { name: "segnare", back: "TO SCORE", emoji: "🥅", type: "vocab", category: "sports" },
+      { name: "allungarsi", back: "TO STRETCH", emoji: "🤸‍♀️", type: "vocab", category: "sports" },
+      { name: "calciare", back: "TO KICK", emoji: "🦵", type: "vocab", category: "sports" },
+      { name: "perdere", back: "TO LOSE", emoji: "😞", type: "vocab", category: "sports" },
+      { name: "vincere", back: "TO WIN", emoji: "🏆", type: "vocab", category: "sports" },
+      { name: "lanciare", back: "TO THROW", emoji: "🤾", type: "vocab", category: "sports" },
+      { name: "placcare", back: "TO TACKLE", emoji: "🏉", type: "vocab", category: "sports" },
+      { name: "tenersi in forma", back: "TO KEEP FIT", emoji: "🏋️‍♂️", type: "vocab", category: "sports" },
+      { name: "iscriversi", back: "TO JOIN A CLUB", emoji: "🧑‍🤝‍🧑", type: "vocab", category: "sports" },
+      { name: "iniziare sport", back: "TO TAKE UP A NEW SPORT", emoji: "🚀", type: "vocab", category: "sports" },
+      { name: "sport esterno", back: "TO DO AN OUTDOOR SPORT", emoji: "🏞️", type: "vocab", category: "sports" },
+      { name: "chattare online", back: "TO CHAT ONLINE", emoji: "💬", type: "vocab", category: "sports" },
+      { name: "fare la spesa", back: "TO GO SHOPPING", emoji: "🛒", type: "vocab", category: "sports" },
+      { name: "suonare", back: "TO PLAY AN INSTRUMENT", emoji: "🎸", type: "vocab", category: "sports" },
+      { name: "giocare a scacchi", back: "TO PLAY CHESS", emoji: "♟️", type: "vocab", category: "sports" },
+      { name: "costume da bagno", back: "SWIMMING COSTUME", emoji: "🩱", type: "vocab", category: "sports" }
+    ];
+
+    let extractedItems = [];
+    let availableItems = [...italianWords];
+    let isFlipped = false;
+    let isExtracting = false;
+    let audioEnabled = true;
+    let recentCategories = []; // Traccia le ultime 3 categorie estratte
+
+    function initBingoBoard() {
+      const bingoBoard = document.getElementById('bingo-board');
+      bingoBoard.innerHTML = '';
+      
+      italianWords.forEach((item, index) => {
+        const cell = document.createElement('div');
+        cell.className = 'bingo-cell';
+        cell.id = `cell-${index}`;
+        cell.setAttribute('data-index', index);
+        bingoBoard.appendChild(cell);
+      });
+    }
+
+    function updateBingoCell(item, index) {
+      const cell = document.getElementById(`cell-${index}`);
+      if (!cell) return;
+      
+      cell.classList.add('extracted', 'pop-in');
+      cell.innerHTML = `
+        <div class="bingo-cell-emoji" onclick="showEmojiModal('${item.emoji}', '${item.name.replace(/'/g, "\\'")}', '${item.back.replace(/'/g, "\\'")}')">${item.emoji}</div>
+        <div class="bingo-cell-name">${item.name}</div>
+      `;
+      
+      setTimeout(() => {
+        cell.classList.remove('pop-in');
+      }, 500);
+    }
+
+    function showEmojiModal(emoji, nameIt, nameEn) {
+      const modal = document.getElementById('emoji-modal');
+      const modalEmoji = document.getElementById('modal-emoji');
+      const modalName = document.getElementById('modal-name');
+      const modalType = document.getElementById('modal-type');
+      
+      modalEmoji.textContent = emoji;
+      modalName.textContent = nameIt + " → " + nameEn;
+      modalType.textContent = "Italiano - Inglese";
+      modalType.style.color = "#16a34a";
+      
+      modal.classList.add('active');
+    }
+
+    function hideEmojiModal() {
+      const modal = document.getElementById('emoji-modal');
+      modal.classList.remove('active');
+    }
+
+    function speakWord(item) {
+      if (!audioEnabled || !('speechSynthesis' in window)) return;
+      
+      window.speechSynthesis.cancel();
+      
+      const utterIt = new SpeechSynthesisUtterance(item.name);
+      utterIt.lang = 'it-IT';
+      utterIt.rate = 0.9;
+      utterIt.pitch = 1;
+      
+      const utterEn = new SpeechSynthesisUtterance(item.back);
+      utterEn.lang = 'en-GB';
+      utterEn.rate = 0.9;
+      utterEn.pitch = 1;
+      
+      utterIt.onend = () => {
+        setTimeout(() => {
+          window.speechSynthesis.speak(utterEn);
+        }, 500);
+      };
+      
+      window.speechSynthesis.speak(utterIt);
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      const btn = document.getElementById('audio-toggle');
+      btn.textContent = audioEnabled ? '🔊 Audio: ON' : '🔇 Audio: OFF';
+      btn.className = audioEnabled 
+        ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all duration-200 hover:scale-105'
+        : 'bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all duration-200 hover:scale-105';
+    }
+
+    function getBalancedRandomItem() {
+      // Se ci sono meno di 2 parole disponibili, estrai normalmente
+      if (availableItems.length < 2) {
+        const randomIndex = Math.floor(Math.random() * availableItems.length);
+        return { item: availableItems[randomIndex], index: randomIndex };
+      }
+
+      // Controlla se le ultime 3 estrazioni sono della stessa categoria
+      let forbiddenCategory = null;
+      if (recentCategories.length >= 3) {
+        const last3 = recentCategories.slice(-3);
+        if (last3[0] === last3[1] && last3[1] === last3[2]) {
+          forbiddenCategory = last3[0];
+        }
+      }
+
+      // Filtra gli item disponibili escludendo la categoria vietata
+      let candidateItems = availableItems;
+      if (forbiddenCategory) {
+        candidateItems = availableItems.filter(item => item.category !== forbiddenCategory);
+        
+        // Se tutti gli item rimanenti sono della categoria vietata, ignora il filtro
+        if (candidateItems.length === 0) {
+          candidateItems = availableItems;
+        }
+      }
+
+      // Estrai casualmente dai candidati
+      const randomIndex = Math.floor(Math.random() * candidateItems.length);
+      const selectedItem = candidateItems[randomIndex];
+      const originalIndex = availableItems.indexOf(selectedItem);
+      
+      return { item: selectedItem, index: originalIndex };
+    }
+
+    function extractItem() {
+      if (isExtracting) return;
+      
+      if (availableItems.length === 0) {
+        alert('Tutte le parole sono state estratte! 🎉 Clicca Ricomincia per giocare di nuovo.');
+        return;
+      }
+      
+      isExtracting = true;
+      
+      const teacherContainer = document.getElementById('teacher-container');
+      teacherContainer.classList.add('is-animating');
+      
+      const { item, index } = getBalancedRandomItem();
+      availableItems.splice(index, 1);
+      
+      // Aggiungi la categoria alle recenti e mantieni solo le ultime 3
+      recentCategories.push(item.category);
+      if (recentCategories.length > 3) {
+        recentCategories.shift();
+      }
+      
+      const originalIndex = italianWords.findIndex(i => i.name === item.name);
+      
+      extractedItems.push(item);
+      
+      setTimeout(() => {
+        teacherContainer.classList.remove('is-animating');
+        showCard(item);
+        updateBingoCell(item, originalIndex);
+        updateCount();
+        
+        speakWord(item);
+        
+        isExtracting = false;
+      }, 2000);
+    }
+
+    function showCard(item) {
+      const cardContainer = document.getElementById('card-container');
+      const card = document.getElementById('card');
+      const cardName = document.getElementById('card-name');
+      const cardNameBack = document.getElementById('card-name-back');
+      const cardImage = document.getElementById('card-image');
+      const cardType = document.getElementById('card-type');
+      
+      isFlipped = false;
+      card.querySelector('div').style.transform = 'rotateY(0deg)';
+      
+      cardName.textContent = item.name;
+      cardNameBack.textContent = item.back;
+      cardImage.textContent = item.emoji;
+      cardType.textContent = "Italiano → Inglese";
+      
+      cardContainer.classList.remove('hidden');
+      cardContainer.classList.add('slide-in-right');
+      
+      setTimeout(() => {
+        cardContainer.classList.remove('slide-in-right');
+      }, 600);
+    }
+
+    function flipCard() {
+      const card = document.getElementById('card');
+      const cardInner = card.querySelector('div');
+      
+      isFlipped = !isFlipped;
+      cardInner.style.transform = isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
+    }
+
+    function updateCount() {
+      const count = document.getElementById('count');
+      count.textContent = extractedItems.length;
+    }
+
+    function resetGame(event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      
+      const confirmed = confirm('Sei sicuro di voler ricominciare il gioco?');
+      
+      if (confirmed) {
+        availableItems = [...italianWords];
+        extractedItems = [];
+        recentCategories = [];
+        isFlipped = false;
+        isExtracting = false;
+        
+        const cardContainer = document.getElementById('card-container');
+        cardContainer.classList.add('hidden');
+        
+        const teacherContainer = document.getElementById('teacher-container');
+        teacherContainer.classList.remove('is-animating');
+        
+        initBingoBoard();
+        updateCount();
+      }
+      
+      return false;
+    }
+
+    function createFloatingBooks() {
+      const floatingBooks = document.getElementById('floating-books');
+      const bookEmojis = ['😊', '🧠', '⚽', '🎾', '🎸', '📚'];
+      const bookCount = 15;
+      
+      for (let i = 0; i < bookCount; i++) {
+        const book = document.createElement('div');
+        book.className = 'book-icon';
+        book.textContent = bookEmojis[Math.floor(Math.random() * bookEmojis.length)];
+        book.style.left = Math.random() * 100 + '%';
+        book.style.top = Math.random() * 100 + '%';
+        book.style.animationDelay = Math.random() * 4 + 's';
+        book.style.animationDuration = (Math.random() * 2 + 3) + 's';
+        floatingBooks.appendChild(book);
+      }
+    }
+
+    // Event Listeners
+    document.getElementById('extract-btn').addEventListener('click', extractItem);
+    document.getElementById('teacher-container').addEventListener('click', extractItem);
+    document.getElementById('card').addEventListener('click', flipCard);
+    document.getElementById('reset-btn').addEventListener('click', resetGame);
+    document.getElementById('emoji-modal').addEventListener('click', hideEmojiModal);
+    document.getElementById('audio-toggle').addEventListener('click', toggleAudio);
+
+    // Initialize
+    createFloatingBooks();
+    initBingoBoard();
+    updateCount();
+    document.getElementById('total').textContent = italianWords.length;
+    
+    console.log('Tombola Italiano-Inglese caricata con successo!');
+  </script>
+</body>
+</html>
